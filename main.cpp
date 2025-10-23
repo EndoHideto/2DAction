@@ -473,18 +473,10 @@ void DrawDebug(void)
 	char aCtrl[512];
 	RECT rect = { 0,0,SCREEN_WIDTH,SCREEN_HEIGHT };
 	Edit edit = GetEdit();
-	int nPosX = edit.pBlock->pos.x * 10;
-	int nPosY = edit.pBlock->pos.y * 10;
-	int nMoveX = edit.pBlock->move.x * 10;
-	int nMoveY = edit.pBlock->move.y * 10;
-	int nRange = edit.pBlock->fRange * 10;
-	int nWidth = edit.pBlock->fWidth * 10;
-	int nHeight = edit.pBlock->fHeight * 10;
 	char aEdit[10] = {};
 	float fGravity, fJunpSpeed;
+	Player player = *GetPlayer();
 	GetPlayer(&fGravity, &fJunpSpeed);
-	int nGravity = 100 * fGravity;
-	int nJunpSpeed = 10 * fJunpSpeed;
 	Timer time = GetTimer();
 	char sPause[32] = {};
 
@@ -502,13 +494,13 @@ void DrawDebug(void)
 	}
 
 	//テキストを代入
-	wsprintf(&aStr[0], "FPS:%d\nEDIT:%s\nSetBlock:%d\nEditNumber:%d(6↓/7↑)\n"
-		"\nジャンプ力:%d.%d(Q↓E↑)\n重力:%d.%d(Z↓C↑)\nタイム:%3d:%2d.%2d\n"
+	sprintf(&aStr[0], "FPS:%d\nEDIT:%s\nSetBlock:%d\nEditNumber:%d(6↓/7↑)\n"
+		"\nジャンプ力:%.2f(Q↓E↑)\n重力:%.2f(Z↓C↑)\ncol:r %.1f,g %.1f,b %.1f\nタイム:%3d:%2d.%2d\n"
 		, g_nCountFPS,&aEdit,edit.nSetBlock,edit.nTagBlock+1,
-		nJunpSpeed/10, nJunpSpeed%10, nGravity/100, nGravity%100,time.nTime/6000,time.nTime%6000 /100,time.nTime %100);
+		fJunpSpeed, fGravity,player.col.r,player.col.g,player.col.b,time.nTime/6000,time.nTime%6000 /100,time.nTime %100);
 
-	wsprintf(&aCtrl[0], "WASDキャラ行動\n↑/↓: posX : %d\n←/→: posY %d\nI/J: moveX:%d\nShift I/J: moveY:%d\nU/H: Range:%d\nShift←/→: Width:%d\nShift↑/↓:Height:%d\n%s"
-				, nPosX/10, nPosY/10,nMoveX/10, nMoveY/10, nRange/10,nWidth/10,nHeight/10, &sPause);
+	sprintf(&aCtrl[0], "WASDキャラ行動\n↑/↓: posX : %4.1f\n←/→: posY %4.1f\nI/J: moveX:%2.1f\nShift I/J: moveY:%2.1f\nU/H: Range:%3.1f\nShift←/→: Width:%4.1f\nShift↑/↓:Height:%4.1f\n%s"
+				,edit.pBlock->pos.x, edit.pBlock->pos.y, edit.pBlock->move.x, edit.pBlock->move.y, edit.pBlock->fRange, edit.pBlock->fWidth, edit.pBlock->fHeight/10, &sPause);
 
 	//テキスト描画
 	g_pFont->DrawText(NULL, &aStr[0], -1, &rect, DT_LEFT, D3DCOLOR_RGBA(0,128,255,255));

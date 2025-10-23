@@ -13,6 +13,8 @@
 LPDIRECT3DTEXTURE9 g_pTextureRetry = NULL;				//テクスチャへのポインタ
 LPDIRECT3DVERTEXBUFFER9 g_pVtxBuffRetry = NULL;			//頂点バッファへのポインタ
 D3DXVECTOR3 g_posRetry;									//表示位置
+bool g_bRetry;											//リトライが決定されたか
+int g_nRetryCounter;									//決定してから実際に動けるまでのカウンター
 
 //=======================================
 // 背景の初期化処理
@@ -34,8 +36,10 @@ void InitRetry(void)
 		&g_pVtxBuffRetry,
 		NULL);
 
-	//位置を格納
+	//各変数の初期化
 	g_posRetry = D3DXVECTOR3(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 0.0f);
+	g_nRetryCounter = RETRY_COUTER;
+	g_bRetry = false;
 
 	//頂点バッファをロックし、頂点情報へのポインタを取得
 	g_pVtxBuffRetry->Lock(0, 0,(void**)&pVtx, 0);
@@ -106,17 +110,28 @@ void UpdateRetry(void)
 
 		if (GetKeyboardTrigger(DIK_SPACE) == true || GetKeyboardTrigger(DIK_RETURN) == true || GetJoypadTrigger(JOYKEY_A) == true)
 		{//スペース・エンター・Aボタンで復活
-			GetPlayer()->state = PLAYERSTATE_NORMAL;	//状態を復活
-			RestartTimer();								//タイマーを再開
+			g_bRetry = true;
 		}
-	}
-	else
-	{
-		//頂点カラー設定
-		pVtx[0].col = D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f);
-		pVtx[1].col = D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f);
-		pVtx[2].col = D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f);
-		pVtx[3].col = D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f);
+
+		if (g_bRetry == true)
+		{//決定されたらカウント開始
+			g_nRetryCounter--;
+			GetPlayer()->pos += (PLAYER_START_POS - GetPlayer()->pos) * 0.5f;
+			if (g_nRetryCounter < 0)
+			{//カウント終了
+				g_nRetryCounter = RETRY_COUTER;				//カウンターの初期化
+				g_bRetry = false;							//falseに戻す
+				GetPlayer()->state = PLAYERSTATE_NORMAL;	//状態を復活
+				RestartTimer();								//タイマーを再開
+			}
+
+			//リトライ非表示
+			pVtx[0].col = D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f);
+			pVtx[1].col = D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f);
+			pVtx[2].col = D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f);
+			pVtx[3].col = D3DXCOLOR(1.0f, 1.0f, 1.0f, 0.0f);
+
+		}
 	}
 
 	//頂点バッファのロック解除

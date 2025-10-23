@@ -157,19 +157,22 @@ void UpdateTimer(void)
 
 	if (g_timer.bTimerStart == false)
 	{
-		if (g_timer.posStart.y < pPlayer->pos.y
-			&& pPlayer->pos.y - pPlayer->fHeight < g_timer.posStart.y + g_timer.fSize
-			&& g_timer.posStart.x < pPlayer->pos.x + pPlayer->fWidth
-			&& pPlayer->pos.x - pPlayer->fWidth < g_timer.posStart.x + g_timer.fSize)
-		{//当たったらタイマースタート
-			g_timer.bTimerStart = true;
-			g_timer.starttime = timeGetTime();
+		if (GetPlayer()->bUse == true)
+		{
+			if (g_timer.posStart.y < pPlayer->pos.y
+				&& pPlayer->pos.y - pPlayer->fHeight < g_timer.posStart.y + g_timer.fSize
+				&& g_timer.posStart.x < pPlayer->pos.x + pPlayer->fWidth
+				&& pPlayer->pos.x - pPlayer->fWidth < g_timer.posStart.x + g_timer.fSize)
+			{//当たったらタイマースタート
+				g_timer.bTimerStart = true;
+				g_timer.starttime = timeGetTime();
 
-			//時計を透明にする
-			pVtx[0].col = D3DXCOLOR(0.0f, 0.0f, 0.0f, 0.0f);
-			pVtx[1].col = D3DXCOLOR(0.0f, 0.0f, 0.0f, 0.0f);
-			pVtx[2].col = D3DXCOLOR(0.0f, 0.0f, 0.0f, 0.0f);
-			pVtx[3].col = D3DXCOLOR(0.0f, 0.0f, 0.0f, 0.0f);
+				//時計を透明にする
+				pVtx[0].col = D3DXCOLOR(0.0f, 0.0f, 0.0f, 0.0f);
+				pVtx[1].col = D3DXCOLOR(0.0f, 0.0f, 0.0f, 0.0f);
+				pVtx[2].col = D3DXCOLOR(0.0f, 0.0f, 0.0f, 0.0f);
+				pVtx[3].col = D3DXCOLOR(0.0f, 0.0f, 0.0f, 0.0f);
+			}
 		}
 	}
 	else
@@ -245,11 +248,9 @@ void DrawTimer(void)
 			//ポリゴンの描画
 			pDevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, 4 * (nCntResult + 1), 2);
 		}
-
 	}
 	else
 	{
-
 		//テクスチャの設定
 		pDevice->SetTexture(0, g_pTexturTimer[0]);
 

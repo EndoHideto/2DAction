@@ -49,6 +49,7 @@ void InitPlayer(void)
 		NULL);
 
 	//初期位置と移動量を設定
+	g_Player.col = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
 	g_Player.pos = PLAYER_START_POS;		//初期位置
 	g_Player.posOld = PLAYER_START_POS;
 	g_Player.move = MOVE_ZERO;
@@ -58,6 +59,7 @@ void InitPlayer(void)
 	g_Player.pBlock = NULL;
 	g_Player.bUse = true;
 	g_Player.nDeath = 0;
+	g_Player.nCntStart = 0;
 	g_fJunpSpeed = SPEED_JUMP;				//ジャンプのパワー
 	g_fGravity = GRAVITY;					//重力
 
@@ -124,6 +126,7 @@ void UpdatePlayer(void)
 	if(g_Player.state == PLAYERSTATE_DEATH)
 	{//死んでいたら
 		g_Player.nDeath++;
+		g_Player.nCntStart = 0;
 	}
 	else if (g_Player.bUse == false)
 	{//操作不可能なら
@@ -136,16 +139,15 @@ void UpdatePlayer(void)
 		//前回の位置位置を保存
 		g_Player.posOld = g_Player.pos;
 
+		g_Player.nCntStart++;
 		g_Player.nCntAnim++;
 		if (g_Player.nCntAnim % 8 == 0)
 		{
 			g_Player.nPtnAnim++;
 		}
-
+		//プレイヤーの移動・操作
 		PlayerMove();
 	}
-
-
 		//頂点バッファをロックし、頂点情報へのポインタを取得
 		g_pVtxBuffPlayer->Lock(0, 0, (void**)&pVtx, 0);
 
@@ -154,6 +156,12 @@ void UpdatePlayer(void)
 		pVtx[1].pos = D3DXVECTOR3(g_Player.pos.x + g_Player.fWidth, g_Player.pos.y - g_Player.fHeight, 0.0f);
 		pVtx[2].pos = D3DXVECTOR3(g_Player.pos.x - g_Player.fWidth, g_Player.pos.y, 0.0f);
 		pVtx[3].pos = D3DXVECTOR3(g_Player.pos.x + g_Player.fWidth, g_Player.pos.y, 0.0f);
+
+		//頂点カラー設定
+		pVtx[0].col = g_Player.col;
+		pVtx[1].col = g_Player.col;
+		pVtx[2].col = g_Player.col;
+		pVtx[3].col = g_Player.col;
 
 		//テクスチャの座標設定
 		pVtx[0].tex = D3DXVECTOR2(0.25f * g_Player.nPtnAnim, g_Player.fDirectionMove);
@@ -181,6 +189,21 @@ void UpdatePlayer(void)
 	{
 		g_fGravity -= 0.02;
 	}
+	if (GetKeyboardRepeat(DIK_R) == true)
+	{
+		g_Player.col.r = (((int)(g_Player.col.r * 10) + 1) % 11) * 0.1f;
+	}
+	if (GetKeyboardRepeat(DIK_G) == true)
+	{
+		g_Player.col.g = (((int)(g_Player.col.g * 10) + 1) % 11) * 0.1f;
+
+	}
+	if (GetKeyboardRepeat(DIK_B) == true)
+	{
+		g_Player.col.b = (((int)(g_Player.col.b * 10) + 1) % 11) * 0.1f;
+
+	}
+
 #endif
 }
 
@@ -188,42 +211,48 @@ void UpdatePlayer(void)
 // プレイヤーの移動処理
 void PlayerMove()
 {	
-	//移動操作
-	if ((GetKeyboardPress(DIK_A) == true) || (GetKeyboardPress(DIK_D) == true))
-	{//キーボード操作
-		if (GetKeyboardPress(DIK_A) == true)
-		{//左
-			g_Player.move.x = sinf(-0.5f * D3DX_PI) * ACCEL;
-			g_Player.fDirectionMove = 0.0f;
+	if (REVIVALTIME < g_Player.nCntStart)
+	{
+		//移動操作
+		if ((GetKeyboardPress(DIK_A) == true) || (GetKeyboardPress(DIK_D) == true))
+		{//キーボード操作
+			if (GetKeyboardPress(DIK_A) == true)
+			{//左
+				g_Player.move.x = sinf(-0.5f * D3DX_PI) * ACCEL;
+				g_Player.fDirectionMove = 0.0f;
+			}
+
+			if (GetKeyboardPress(DIK_D) == true)
+			{//右
+				g_Player.move.x = sinf(0.5f * D3DX_PI) * ACCEL;
+				g_Player.fDirectionMove = 0.5f;
+			}
+
+		}
+		else if (GetJoypadStick(LEFT).x != 0 || GetJoypadStick(LEFT).y != 0)
+		{//コントローラー操作
+
+			g_Player.move.x = GetJoypadStick(LEFT).x * ACCEL;
+			if (g_Player.move.x < 0)
+			{
+				g_Player.fDirectionMove = 0.0f;
+			}
+			if (0 < g_Player.move.x)
+			{
+				g_Player.fDirectionMove = 0.5f;
+			}
+		}
+		else if (-0.2f <= g_Player.move.x && g_Player.move.x <= 0.2f)
+		{//速度が一定以下で停止
+			g_Player.move.x = 0;
 		}
 
-		if (GetKeyboardPress(DIK_D) == true)
-		{//右
-			g_Player.move.x = sinf(0.5f * D3DX_PI) * ACCEL;
-			g_Player.fDirectionMove = 0.5f;
-		}
-
+		//ジャンプ
+		PlayerJump();
 	}
-	else if (GetJoypadStick(LEFT).x != 0 || GetJoypadStick(LEFT).y != 0)
-	{//コントローラー操作
 
-		g_Player.move.x = GetJoypadStick(LEFT).x * ACCEL;
-		if (g_Player.move.x < 0)
-		{
-			g_Player.fDirectionMove = 0.0f;
-		}
-		if (0 < g_Player.move.x)
-		{
-			g_Player.fDirectionMove = 0.5f;
-		}
-	}
-	else if(-0.2f <= g_Player.move.x && g_Player.move.x <= 0.2f)
-	{//速度が一定以下で停止
-		g_Player.move.x = 0;
-	}
-
-	//ジャンプ
-	PlayerJump();
+	//重力の影響
+	g_Player.move.y += g_fGravity;
 
 	//移動
 	g_Player.pos += g_Player.move;
@@ -262,10 +291,7 @@ void PlayerJump(void)
 			g_Player.state = PLAYERSTATE_AIRJUMP;
 			g_Player.move.y = -g_fJunpSpeed * 0.8f;
 		}
-
 	}
-
-	g_Player.move.y += g_fGravity;
 }
 
 //=======================================

@@ -11,15 +11,16 @@
 #include "block.h"
 
 //マクロ定義
-#define PLAYER_WIDTH (30)		//プレイヤーの幅
-#define PLAYER_HEIGHT (60)		//プレイヤーの高さ
-#define PLAYER_START_POS D3DXVECTOR3(50.0f,600.0f,0.0f)	//出現位置
-#define MOVE_ZERO D3DXVECTOR3(0.0f,0.0f,0.0f)			//move値をゼロにしたいとき使う
-#define ACCEL (4)				//移動速度
-#define SPEED_JUMP (9)			//ジャンプ力ぅ
-#define SPEED_DASH (20)			//ダッシュの速度(未実装)
-#define GRAVITY	(0.35)			//重力
-#define REVIVALTIME (20)		//復活にかかる時間
+#define PLAYER_WIDTH		(30)								//プレイヤーの幅
+#define PLAYER_HEIGHT		(60)								//プレイヤーの高さ
+#define PLAYER_COL			D3DXCOLOR(1.0f,1.0f,1.0f,1.0f)		//初期の色
+#define PLAYER_START_POS	D3DXVECTOR3(50.0f,600.0f,0.0f)		//出現位置
+#define MOVE_ZERO			D3DXVECTOR3(0.0f,0.0f,0.0f)			//move値をゼロにしたいとき使う
+#define ACCEL				(4)									//移動速度
+#define SPEED_JUMP			(9)									//ジャンプ力ぅ
+#define SPEED_DASH			(20)								//ダッシュの速度(未実装)
+#define GRAVITY				(0.35)								//重力
+#define REVIVALTIME			(20)								//復活時操作を受け付けない時間
 
 //プレイヤー状態列挙
 typedef enum
@@ -29,7 +30,7 @@ typedef enum
 	PLAYERSTATE_JUMP,			//ジャンプ
 	PLAYERSTATE_AIRJUMP,		//二段ジャンプ
 	PLAYERSTATE_FALL,			//落下
-	PLAYERSTATE_DEATH,
+	PLAYERSTATE_DEATH,			//死亡
 	PLAYERSTATE_MAX
 }PLAYERSTATE;
 
@@ -37,6 +38,7 @@ typedef enum
 typedef struct
 {
 	PLAYERSTATE state;			//ジャンプ状態
+	D3DXCOLOR col;				//色
 	D3DXVECTOR3 pos;			//現在位置
 	D3DXVECTOR3 posOld;			//前回位置
 	D3DXVECTOR3 move;			//速度
@@ -44,6 +46,7 @@ typedef struct
 	float fHeight;				//高さ
 	int nCntAnim;				//アニメーションカウンタ
 	int nPtnAnim;				//アニメーションパターン
+	int nCntStart;				//開始数フレームは移動不可
 	float fDirectionMove;		//左右の向き（テクスチャ上段下段切り替え）
 	Block* pBlock;				//対象のブロックへのポインタ
 	int nDeath;					//死亡回数
