@@ -16,15 +16,15 @@ Block g_aBlock[MAX_BLOCK];										//オブジェクト情報
 Edit g_Edit;													//エディット情報
 BlockInfo g_aBlockInfo[MAX_BLOCK] =
 {
-	{D3DXVECTOR3(0.0f, SCREEN_HEIGHT - 30, 0.0f), SCREEN_WIDTH, 30.0f,D3DXVECTOR3(0, 0, 0), 0},
-	{D3DXVECTOR3(300, 605, 0.0f), 80, 10,D3DXVECTOR3(0, 0, 0), 0 ,BLOCKTYPE_NORMAL},
-	{D3DXVECTOR3(425, 485, 0.0f), 100, 10, D3DXVECTOR3(0, 0, 0), 0,BLOCKTYPE_NORMAL},
-	{D3DXVECTOR3(640, 410, 0.0f), 100, 290, D3DXVECTOR3(0, 0, 0), 0,BLOCKTYPE_NORMAL},
-	{D3DXVECTOR3(840, 550, 0.0f), 75, 10, D3DXVECTOR3(0, 0, 0), 0,BLOCKTYPE_NORMAL},
-	{D3DXVECTOR3(725, 535, 0.0f), 65, 10, D3DXVECTOR3(0, 0, 0), 0,BLOCKTYPE_NORMAL},
-	{D3DXVECTOR3(825, 45, 0.0f), 30, 270, D3DXVECTOR3(0, 0, 0), 0,BLOCKTYPE_NORMAL},
-	{D3DXVECTOR3(935, 380, 0.0f), 100, 10, D3DXVECTOR3(0, 0, 0), 0,BLOCKTYPE_NORMAL},
-	{D3DXVECTOR3(505, 655, 0.0f), 135, 35, D3DXVECTOR3(0, 0, 0), 0,BLOCKTYPE_SPIKE},
+	{D3DXVECTOR3(0.0f, SCREEN_HEIGHT - 30, 0.0f), SCREEN_WIDTH, 30.0f,D3DXVECTOR3(0, 0, 0), 0,BLOCKTYPE_NORMAL,0},
+	{D3DXVECTOR3(300, 605, 0.0f)	,80	,10,	D3DXVECTOR3(0, 0, 0), 0,BLOCKTYPE_NORMAL,0},
+	{D3DXVECTOR3(425, 485, 0.0f)	,100,10,	D3DXVECTOR3(0, 0, 0), 0,BLOCKTYPE_NORMAL,0},
+	{D3DXVECTOR3(640, 410, 0.0f)	,100,290,	D3DXVECTOR3(0, 0, 0), 0,BLOCKTYPE_NORMAL,0},
+	{D3DXVECTOR3(840, 550, 0.0f)	,75	,10,	D3DXVECTOR3(0, 0, 0), 0,BLOCKTYPE_NORMAL,0},
+	{D3DXVECTOR3(725, 535, 0.0f)	,65	,10,	D3DXVECTOR3(0, 0, 0), 0,BLOCKTYPE_NORMAL,0},
+	{D3DXVECTOR3(825, 45, 0.0f)		,30	,270,	D3DXVECTOR3(0, 0, 0), 0,BLOCKTYPE_NORMAL,0},
+	{D3DXVECTOR3(935, 380, 0.0f)	,100,10,	D3DXVECTOR3(0, 0, 0), 0,BLOCKTYPE_NORMAL,0},
+	{D3DXVECTOR3(505, 655, 0.0f)	,135,35,	D3DXVECTOR3(0, 0, 0), 0,BLOCKTYPE_SPIKE	,0},
 };
 int g_nSetBlock;											//設置済みブロック
 int g_nLoadBlock;											//読み込んだブロック
@@ -44,7 +44,7 @@ void InitBlock(void)
 
 	//テクスチャ読み込み
 	D3DXCreateTextureFromFile(pDevice,"data\\TEXTURE\\Object\\block000.jpg",&g_pTextureBlock[BLOCKTYPE_NORMAL]);
-	D3DXCreateTextureFromFile(pDevice,"data\\TEXTURE\\Object\\toge.png", &g_pTextureBlock[BLOCKTYPE_SPIKE]);
+	D3DXCreateTextureFromFile(pDevice,"data\\TEXTURE\\Object\\spike.png", &g_pTextureBlock[BLOCKTYPE_SPIKE]);
 	D3DXCreateTextureFromFile(pDevice,"data\\TEXTURE\\Object\\block004.jpg",&g_pTextureBlock[BLOCKTYPE_ICE]);
 
 	//頂点バッファの読み込み
@@ -104,7 +104,7 @@ void InitBlock(void)
 	for (int nCntBlock = 0; nCntBlock < g_nLoadBlock; nCntBlock++)
 	{
 		SetBlock(g_aBlockInfo[nCntBlock].pos, g_aBlockInfo[nCntBlock].fWidth,
-			g_aBlockInfo[nCntBlock].fHeight, g_aBlockInfo[nCntBlock].move, g_aBlockInfo[nCntBlock].fRange,g_aBlockInfo[nCntBlock].type);
+			g_aBlockInfo[nCntBlock].fHeight, g_aBlockInfo[nCntBlock].move, g_aBlockInfo[nCntBlock].fRange,g_aBlockInfo[nCntBlock].type,g_aBlockInfo[nCntBlock].fDirection);
 	}
 
 }
@@ -172,7 +172,7 @@ void UpdateBlock(void)
 		for (int nCntBlock = 0; nCntBlock < g_nLoadBlock; nCntBlock++)
 		{
 			SetBlock(g_aBlockInfo[nCntBlock].pos, g_aBlockInfo[nCntBlock].fWidth,
-				g_aBlockInfo[nCntBlock].fHeight, g_aBlockInfo[nCntBlock].move, g_aBlockInfo[nCntBlock].fRange, g_aBlockInfo[nCntBlock].type);
+				g_aBlockInfo[nCntBlock].fHeight, g_aBlockInfo[nCntBlock].move, g_aBlockInfo[nCntBlock].fRange, g_aBlockInfo[nCntBlock].type, g_aBlockInfo[nCntBlock].fDirection);
 		}
 	}
 #endif
@@ -211,10 +211,17 @@ void UpdateBlock(void)
 				}
 
 				//頂点座標を設定
-				pVtx[0].pos = pBlock->pos;
+				pVtx[0].pos = D3DXVECTOR3(pBlock->pos.x, pBlock->pos.y, 0.0f);
+				pVtx[1].pos = D3DXVECTOR3(pBlock->pos.x + sin(D3DX_PI * 0.5f + pBlock->fDirection) * pBlock->fWidth, pBlock->pos.y + cos(D3DX_PI * 0.5f + pBlock->fDirection) * pBlock->fHeight, 0.0f);
+				pVtx[2].pos = D3DXVECTOR3(pBlock->pos.x + sin(D3DX_PI * 0.0f + pBlock->fDirection) * pBlock->fWidth, pBlock->pos.y + cos(D3DX_PI * 0.0f + pBlock->fDirection) * pBlock->fHeight, 0.0f);
+				pVtx[3].pos = D3DXVECTOR3(pBlock->pos.x + sin(pBlock->fAngle + pBlock->fDirection) * pBlock->fLength, pBlock->pos.y + cos(pBlock->fAngle + pBlock->fDirection) * pBlock->fLength, 0.0f);
+#if 0
+				//widthとheightでの方法
+				pVtx[0].pos = D3DXVECTOR3(pBlock->pos.x, pBlock->pos.y, 0.0f);
 				pVtx[1].pos = D3DXVECTOR3(pBlock->pos.x + pBlock->fWidth, pBlock->pos.y, 0.0f);
 				pVtx[2].pos = D3DXVECTOR3(pBlock->pos.x, pBlock->pos.y + pBlock->fHeight, 0.0f);
 				pVtx[3].pos = D3DXVECTOR3(pBlock->pos.x + pBlock->fWidth, pBlock->pos.y + pBlock->fHeight, 0.0f);
+#endif
 
 				//頂点カラー設定
 				pVtx[0].col = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
@@ -224,14 +231,13 @@ void UpdateBlock(void)
 
 				if (pBlock->type == BLOCKTYPE_SPIKE)
 				{
-					pVtx[0].tex = D3DXVECTOR2  (0.0f,0.0f);
-					pVtx[1].tex = D3DXVECTOR2  ((int)(pBlock->fWidth / BLOCKTEX_INTERVAL),0.0f);
-					pVtx[2].tex = D3DXVECTOR2  (0.0f,1.0f);
-					pVtx[3].tex = D3DXVECTOR2  ((int)(pBlock->fWidth / BLOCKTEX_INTERVAL),1.0f);
+					pVtx[0].tex = D3DXVECTOR2(0.0f, 0.0f);
+					pVtx[1].tex = D3DXVECTOR2((int)(pBlock->fWidth / BLOCKTEX_INTERVAL), 0.0f);
+					pVtx[2].tex = D3DXVECTOR2(0.0f, 1.0f);
+					pVtx[3].tex = D3DXVECTOR2((int)(pBlock->fWidth / BLOCKTEX_INTERVAL),1.0f);
 				}
 				else
 				{
-					//テクスチャの座標設定
 					pVtx[0].tex = D3DXVECTOR2(pBlock->pos.x / BLOCKTEX_INTERVAL, pBlock->pos.y / BLOCKTEX_INTERVAL);
 					pVtx[1].tex = D3DXVECTOR2((pBlock->pos.x + pBlock->fWidth) / BLOCKTEX_INTERVAL, pBlock->pos.y / BLOCKTEX_INTERVAL);
 					pVtx[2].tex = D3DXVECTOR2(pBlock->pos.x / BLOCKTEX_INTERVAL, (pBlock->pos.y + pBlock->fHeight) / BLOCKTEX_INTERVAL);
@@ -250,12 +256,12 @@ void UpdateBlock(void)
 void BlockEdit(VERTEX_2D* pVtx)
 {
 	Block* pBlock;			//ブロックポインタ
-	int nBlockType;			//ブロックタイプ（一時的に使用
+	float fTmp;
 
 	//ブロック設置
 	if (GetKeyboardTrigger(DIK_RETURN) == true)
 	{
-		SetBlock(D3DXVECTOR3(100, 100, 0), 100, 100, D3DXVECTOR3(0, 0, 0), 0, BLOCKTYPE_NORMAL);
+		SetBlock(D3DXVECTOR3(100, 100, 0), 100, 100, D3DXVECTOR3(0, 0, 0), 0, BLOCKTYPE_NORMAL,0.0f);
 	}
 	//ブロック削除
 	if (GetKeyboardTrigger(DIK_BACK) == true)
@@ -275,6 +281,7 @@ void BlockEdit(VERTEX_2D* pVtx)
 			}
 		}
 	}
+
 	//次のブロックへ
 	if (GetKeyboardTrigger(DIK_7) == true)
 	{
@@ -325,6 +332,63 @@ void BlockEdit(VERTEX_2D* pVtx)
 		g_Edit.pBlock->posOrigin.x += 5;
 	}
 
+	//大きさ
+	if (GetKeyboardRepeat(DIK_UP) == true && GetKeyboardPress(DIK_LSHIFT) == true)
+	{
+		if (g_Edit.pBlock->fHeight < SCREEN_HEIGHT)
+			g_Edit.pBlock->fHeight += 5;
+		//対角線を修正
+		pBlock->fAngle = atan2f(pBlock->fWidth, pBlock->fHeight);
+		pBlock->fLength = sqrt(pow(pBlock->fWidth, 2) + pow(pBlock->fHeight, 2));
+	}
+	if (GetKeyboardRepeat(DIK_DOWN) == true && GetKeyboardPress(DIK_LSHIFT) == true)
+	{
+		if (0 < g_Edit.pBlock->fHeight)
+			g_Edit.pBlock->fHeight -= 5;
+		//対角線を修正
+		pBlock->fAngle = atan2f(pBlock->fWidth, pBlock->fHeight);
+		pBlock->fLength = sqrt(pow(pBlock->fWidth, 2) + pow(pBlock->fHeight, 2));
+	}
+	if (GetKeyboardRepeat(DIK_LEFT) == true && GetKeyboardPress(DIK_LSHIFT) == true)
+	{
+		if (0 < g_Edit.pBlock->fWidth)
+			g_Edit.pBlock->fWidth -= 5;
+		//対角線を修正
+		pBlock->fAngle = atan2f(pBlock->fWidth, pBlock->fHeight);
+		pBlock->fLength = sqrt(pow(pBlock->fWidth, 2) + pow(pBlock->fHeight, 2));
+	}
+	if (GetKeyboardRepeat(DIK_RIGHT) == true && GetKeyboardPress(DIK_LSHIFT) == true)
+	{
+		if (g_Edit.pBlock->fWidth < SCREEN_WIDTH)
+			g_Edit.pBlock->fWidth += 5;
+		//対角線を修正
+		pBlock->fAngle = atan2f(pBlock->fWidth, pBlock->fHeight);
+		pBlock->fLength = sqrt(pow(pBlock->fWidth, 2) + pow(pBlock->fHeight, 2));
+	}
+
+	//回転
+	if (GetKeyboardRepeat(DIK_O) == true)
+	{
+		pBlock->fDirection += D3DX_PI * 0.5f;
+		//pBlock->pos += D3DXVECTOR3();
+		fTmp = pBlock->fWidth;
+		pBlock->fWidth = pBlock->fHeight;
+		pBlock->fHeight = fTmp;
+	}
+	if (GetKeyboardRepeat(DIK_K) == true)
+	{
+		pBlock->fDirection -= D3DX_PI * 0.5f;
+
+		fTmp = pBlock->fWidth;
+		pBlock->fWidth = pBlock->fHeight;
+		pBlock->fHeight = fTmp;
+	}
+
+	if (GetKeyboardRepeat(DIK_M) == true)
+	{
+		pBlock->fDirection = 0;
+	}
+
 	//速度・移動範囲
 	if (GetKeyboardRepeat(DIK_I) == true)
 	{
@@ -332,7 +396,10 @@ void BlockEdit(VERTEX_2D* pVtx)
 		{
 			g_Edit.pBlock->move.y += 0.1;
 		}
-		else { g_Edit.pBlock->move.x += 0.1; }
+		else
+		{
+			g_Edit.pBlock->move.x += 0.1;
+		}
 	}
 	if (GetKeyboardRepeat(DIK_J) == true)
 	{
@@ -340,7 +407,10 @@ void BlockEdit(VERTEX_2D* pVtx)
 		{
 			g_Edit.pBlock->move.y -= 0.1;
 		}
-		else { g_Edit.pBlock->move.x -= 0.1; }
+		else
+		{
+			g_Edit.pBlock->move.x -= 0.1;
+		}
 	}
 	if (GetKeyboardRepeat(DIK_U) == true)
 	{
@@ -351,35 +421,17 @@ void BlockEdit(VERTEX_2D* pVtx)
 		g_Edit.pBlock->fRange -= 5;
 	}
 
-	//大きさ
-	if (GetKeyboardRepeat(DIK_UP) == true && GetKeyboardPress(DIK_LSHIFT) == true)
-	{
-		if (g_Edit.pBlock->fHeight < SCREEN_HEIGHT)
-			g_Edit.pBlock->fHeight += 5;
-	}
-	if (GetKeyboardRepeat(DIK_DOWN) == true && GetKeyboardPress(DIK_LSHIFT) == true)
-	{
-		if (0 < g_Edit.pBlock->fHeight)
-			g_Edit.pBlock->fHeight -= 5;
-	}
-	if (GetKeyboardRepeat(DIK_LEFT) == true && GetKeyboardPress(DIK_LSHIFT) == true)
-	{
-		if (0 < g_Edit.pBlock->fWidth)
-			g_Edit.pBlock->fWidth -= 5;
-	}
-	if (GetKeyboardRepeat(DIK_RIGHT) == true && GetKeyboardPress(DIK_LSHIFT) == true)
-	{
-		if (g_Edit.pBlock->fWidth < SCREEN_WIDTH)
-			g_Edit.pBlock->fWidth += 5;
-	}
-
 	//種類
 	if (GetKeyboardTrigger(DIK_5) == true)
 	{
 		if ((int)g_Edit.pBlock->type + 1 < BLOCKTYPE_MAX)
+		{
 			g_Edit.pBlock->type = (BlockType)((int)g_Edit.pBlock->type + 1);
+		}
 		else
+		{
 			g_Edit.pBlock->type = (BlockType)0;
+		}
 	}
 	if (GetKeyboardTrigger(DIK_4) == true)
 	{
@@ -396,10 +448,16 @@ void BlockEdit(VERTEX_2D* pVtx)
 			pBlock = &g_aBlock[nCntBlock];
 
 			//頂点座標を設定
-			pVtx[0].pos = pBlock->pos;
-			pVtx[1].pos = D3DXVECTOR3(pBlock->pos.x + pBlock->fWidth, pBlock->pos.y, 0.0f);
-			pVtx[2].pos = D3DXVECTOR3(pBlock->pos.x, pBlock->pos.y + pBlock->fHeight, 0.0f);
-			pVtx[3].pos = D3DXVECTOR3(pBlock->pos.x + pBlock->fWidth, pBlock->pos.y + pBlock->fHeight, 0.0f);
+			//pVtx[0].pos = pBlock->pos;
+			//pVtx[1].pos = D3DXVECTOR3(pBlock->pos.x + pBlock->fWidth, pBlock->pos.y, 0.0f);
+			//pVtx[2].pos = D3DXVECTOR3(pBlock->pos.x, pBlock->pos.y + pBlock->fHeight, 0.0f);
+			//pVtx[3].pos = D3DXVECTOR3(pBlock->pos.x + pBlock->fWidth, pBlock->pos.y + pBlock->fHeight, 0.0f);
+
+			//頂点座標を設定
+			pVtx[0].pos = D3DXVECTOR3(pBlock->pos.x, pBlock->pos.y, 0.0f);
+			pVtx[1].pos = D3DXVECTOR3(pBlock->pos.x + sin(D3DX_PI * 0.5f + pBlock->fDirection) * pBlock->fWidth, pBlock->pos.y + cos(D3DX_PI * 0.5f + pBlock->fDirection) * pBlock->fHeight, 0.0f);
+			pVtx[2].pos = D3DXVECTOR3(pBlock->pos.x + sin(D3DX_PI * 0.0f + pBlock->fDirection) * pBlock->fWidth, pBlock->pos.y + cos(D3DX_PI * 0.0f + pBlock->fDirection) * pBlock->fHeight, 0.0f);
+			pVtx[3].pos = D3DXVECTOR3(pBlock->pos.x + sin(pBlock->fAngle + pBlock->fDirection) * pBlock->fLength, pBlock->pos.y + cos(pBlock->fAngle + pBlock->fDirection) * pBlock->fLength, 0.0f);
 
 			if (nCntBlock == g_Edit.nTagBlock)
 			{//選択中のブロックを黄色くする
@@ -534,7 +592,7 @@ bool CollisionBlock(D3DXVECTOR3* pPos, D3DXVECTOR3* pPosOld, D3DXVECTOR3* pMove,
 //=======================================
 // ブロック設置処理
 //=======================================
-void SetBlock(D3DXVECTOR3 pos, float fWidth, float fHeight, D3DXVECTOR3 move,float fRange, BlockType type)
+void SetBlock(D3DXVECTOR3 pos, float fWidth, float fHeight, D3DXVECTOR3 move,float fRange, BlockType type,float fDirection)
 {
 	float fRot;
 	for (int nCntBlock = 0; nCntBlock < MAX_BLOCK; nCntBlock++)
@@ -542,12 +600,19 @@ void SetBlock(D3DXVECTOR3 pos, float fWidth, float fHeight, D3DXVECTOR3 move,flo
 		if (g_aBlock[nCntBlock].bUse == false)
 		{
 			Block* pBlock = &g_aBlock[nCntBlock];
+
+			//値を保存
 			pBlock->pos = pos;
 			pBlock->fWidth = fWidth;
 			pBlock->fHeight = fHeight;
 			pBlock->move = move;
 			pBlock->fRange = fRange;
 			pBlock->type = type;
+			pBlock->fDirection = fDirection;
+
+			//対角線
+			pBlock->fAngle = atan2f(fWidth,fHeight);
+			pBlock->fLength = sqrt(pow(fWidth, 2) + pow(fHeight, 2));
 
 			fRot = atan2f(pBlock->move.x, pBlock->move.y);	//移動方向を保存
 			pBlock->posOrigin = pos;
@@ -622,13 +687,13 @@ void OpenFile(void)
 	if (pFile != NULL)
 	{	//ファイルが開けたら
 		fread(&g_nLoadBlock, sizeof(int), 1, pFile);
-		fread(&g_aBlockInfo[0], sizeof(BlockInfo), MAX_BLOCK,pFile);
+		fread(&g_aBlockInfo[0], sizeof(BlockInfo), MAX_BLOCK, pFile);
 
 	}
 #if _DEBUG
 	else
 	{//開けなかったら
-		MessageBox(GetActiveWindow(), "開けませんでした","fileerror", MB_OK);
+		MessageBox(GetActiveWindow(), "開けませんでした", "fileerror", MB_OK);
 	}
 #endif
 }

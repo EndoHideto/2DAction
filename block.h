@@ -32,9 +32,12 @@ typedef struct
 	D3DXVECTOR3 posOld;		//前の位置
 	float fWidth;			//幅
 	float fHeight;			//高さ
+	float fAngle;			//対角線の角度
+	float fLength;			//対角線の長さ
 	D3DXVECTOR3 move;		//移動速度
 	float fRange;			//移動する範囲
 	BlockType type;			//ブロックの種類
+	float fDirection;		//向き（90度刻み）
 	bool bUse;				//使っているか
 }Block;
 
@@ -47,6 +50,7 @@ typedef struct
 	D3DXVECTOR3 move;		//移動速度
 	float fRange;			//移動する範囲
 	BlockType type;			//ブロックの種類
+	float fDirection;		//テクスチャ方向
 }BlockInfo;
 
 //エディット情報の構造体
@@ -64,7 +68,7 @@ void UninitBlock(void);
 void UpdateBlock(void);
 void DrawBlock(void);
 bool CollisionBlock(D3DXVECTOR3* pPos, D3DXVECTOR3* pPosOld, D3DXVECTOR3* pMove, float fTagHeight, float fTagWidth,Block **pBlock);
-void SetBlock(D3DXVECTOR3 pos,float fWidth, float fHeight,D3DXVECTOR3 move, float fRange,BlockType type);
+void SetBlock(D3DXVECTOR3 pos,float fWidth, float fHeight,D3DXVECTOR3 move, float fRange,BlockType type,float fDirection);
 Block* GetBlock(void);
 
 

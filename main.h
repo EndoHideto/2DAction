@@ -10,7 +10,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <Windows.h>
 #include "d3dx9.h"
 #define DIRECTINPUT_VERSION (0x0800)		//ƒrƒ‹ƒh‚ÌŒx‘Îˆ—p
