@@ -40,8 +40,8 @@ void InitTimer(void)
 	g_timer.fSize = 50;							//文字サイズ
 	g_timer.bTimerStart = false;				//スタートフラグ
 	g_timer.bTimerBreak = false;				//タイマー一時停止フラグ
-	g_timer.nBreak = 0;							//タイマー一時停止一階分の差分
-	g_timer.nSubTime = 0;						//タイマー一時停止合計
+	g_timer.tBreak = 0;							//タイマー一時停止一階分の差分
+	g_timer.tSubTime = 0;						//タイマー一時停止合計
 
 	//頂点バッファをロックし、頂点情報へのポインタを取得
 	g_pVtxBuffTimer->Lock(0, 0, (void**)&pVtx, 0);
@@ -166,7 +166,7 @@ void UpdateTimer(void)
 				&& pPlayer->pos.x - pPlayer->fWidth < g_timer.posStart.x + g_timer.fSize)
 			{//当たったらタイマースタート
 				g_timer.bTimerStart = true;
-				g_timer.starttime = timeGetTime();
+				g_timer.tStarttime = timeGetTime();
 
 				//時計を透明にする
 				pVtx[0].col = D3DXCOLOR(0.0f, 0.0f, 0.0f, 0.0f);
@@ -185,8 +185,8 @@ void UpdateTimer(void)
 		}
 
 		//一時停止時間を計測し、差し引く
-		g_timer.nBreak = (nowtime - g_timer.breaktime);
-		g_timer.nTime = (nowtime - g_timer.starttime - g_timer.nBreak - g_timer.nSubTime) * 0.1f;
+		g_timer.tBreak = (int)(nowtime - g_timer.breaktime);
+		g_timer.nTime = (int)((nowtime - g_timer.tStarttime - g_timer.tBreak - g_timer.tSubTime) * 0.1f);
 		if (g_timer.nTime < 600000)
 		{
 			nDigit[0] = g_timer.nTime / 60000;			//X0:00.00
@@ -277,8 +277,8 @@ void BreakTimer(bool bTimer)
 	g_timer.bTimerBreak = bTimer;
 	if (g_timer.bTimerBreak)
 	{//一時停止したら
-		g_timer.nSubTime += g_timer.nBreak;	//前回の一時停止時間を合計に加算
-		g_timer.nBreak = 0;					//初期化
+		g_timer.tSubTime += g_timer.tBreak;	//前回の一時停止時間を合計に加算
+		g_timer.tBreak = 0;					//初期化
 	}
 }
 

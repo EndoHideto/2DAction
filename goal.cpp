@@ -40,8 +40,8 @@ void InitGoal(void)
 		&g_pVtxBuffGoal,
 		NULL);
 
-	g_goal.pos = D3DXVECTOR3(1200,300,0);
-	g_goal.fLength = sqrt(GOAL_SIZE*GOAL_SIZE);
+	g_goal.pos = D3DXVECTOR3(1200.0f,300.0f,0);
+	g_goal.fLength = (float)sqrt(GOAL_SIZE*GOAL_SIZE);
 	g_goal.fAngle = atan2f(GOAL_SIZE, GOAL_SIZE);
 	g_goal.fRot = 0;
 	g_goal.nOpen = 0;

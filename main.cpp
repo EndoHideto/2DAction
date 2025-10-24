@@ -386,6 +386,8 @@ void Draw(void)
 		case MODE_TITLE:		//タイトル
 			DrawTitle();
 			break;
+		case MODE_SELECT:		//ステージセレクト
+			break;
 		case MODE_GAME:			//ゲーム画面
 			DrawGame();
 			break;

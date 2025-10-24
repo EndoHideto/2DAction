@@ -33,8 +33,9 @@
 //画面遷移（モード）の種類
 typedef enum
 {
-	MODE_TITLE = 0,
-	MODE_GAME,
+	MODE_TITLE = 0,		//タイトル
+	MODE_SELECT,		//ステージセレクト
+	MODE_GAME,			//ゲーム
 	MODE_MAX
 }MODE;
 

@@ -9,9 +9,9 @@
 
 #include "main.h"
 
-#define GOAL_VER_NUM (4)		//頂点数
-#define GOAL_SIZE (110)			//ゴールの大きさ
-#define TEXTURE_GOAL (2)		//テクスチャ数
+#define GOAL_VER_NUM	(4)				//頂点数
+#define GOAL_SIZE		(110.0f)		//ゴールの大きさ
+#define TEXTURE_GOAL	(2)				//テクスチャ数
 
 //ブロック構造体の定義
 typedef struct

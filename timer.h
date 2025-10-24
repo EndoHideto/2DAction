@@ -25,13 +25,13 @@ typedef struct
 	float fHeight;				//カウンターの高さ
 	D3DXVECTOR3 posStart;		//計測開始オブジェクトの位置
 	float fSize;				//計測開始オブジェクトのサイズ
-	time_t starttime;			//開始時刻
+	time_t tStarttime;			//開始時刻
 	int nTime;					//経過タイム(秒)
 	bool bTimerStart;			//タイマーが動いているかどうか
 	bool bTimerBreak;			//タイマーが一時停止しているかどうか
 	time_t breaktime;			//ブレイクが発生した時刻
-	int nBreak;					//一時停止中の差分
-	int nSubTime;				//差分の合計
+	time_t tBreak;					//一時停止中の差分
+	time_t tSubTime;				//差分の合計
 }Timer;
 
 //プロトタイプ宣言

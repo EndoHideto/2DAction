@@ -11,15 +11,18 @@
 #include "block.h"
 
 //マクロ定義
-#define PLAYER_WIDTH		(30)								//プレイヤーの幅
-#define PLAYER_HEIGHT		(60)								//プレイヤーの高さ
+#define PLAYER_WIDTH		(30.0f)								//プレイヤーの幅
+#define PLAYER_HEIGHT		(60.0f)								//プレイヤーの高さ
 #define PLAYER_COL			D3DXCOLOR(1.0f,1.0f,1.0f,1.0f)		//初期の色
 #define PLAYER_START_POS	D3DXVECTOR3(50.0f,600.0f,0.0f)		//出現位置
 #define MOVE_ZERO			D3DXVECTOR3(0.0f,0.0f,0.0f)			//move値をゼロにしたいとき使う
-#define ACCEL				(4)									//移動速度
-#define SPEED_JUMP			(9)									//ジャンプ力ぅ
-#define SPEED_DASH			(20)								//ダッシュの速度(未実装)
-#define GRAVITY				(0.35)								//重力
+#define ACCEL				(0.5f)								//移動速度
+#define MAX_SPEED			(4.0f)								//最大速度
+#define DIRECTION_LEFT		(0.0f)								//左向き
+#define DIRECTION_RIGHT		(0.5f)								//右向き
+#define JUMP_FORCE			(9.0f)								//ジャンプ力ぅ
+#define DASH_FORCE			(20.0f)								//ダッシュの速度(未実装)
+#define GRAVITY				(0.35f)								//重力
 #define REVIVALTIME			(20)								//復活時操作を受け付けない時間
 
 //プレイヤー状態列挙

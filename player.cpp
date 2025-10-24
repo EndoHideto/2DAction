@@ -62,8 +62,8 @@ void InitPlayer(void)
 	g_Player.bUse = true;
 	g_Player.nDeath = 0;
 	g_Player.nCntStart = 0;
-	g_fJunpSpeed = SPEED_JUMP;				//ジャンプのパワー
-	g_fGravity = GRAVITY;					//重力
+	g_fJunpSpeed = JUMP_FORCE;				//ジャンプのパワー
+	g_fGravity = GRAVITY;				//重力
 
 	//頂点バッファをロックし、頂点情報へのポインタを取得
 	g_pVtxBuffPlayer->Lock(0, 0,(void**)&pVtx, 0);
@@ -199,19 +199,19 @@ void UpdatePlayer(void)
 #if _DEBUG
 	if(GetKeyboardRepeat(DIK_E) == true)
 	{
-		g_fJunpSpeed += 0.1;
+		g_fJunpSpeed += 0.1f;
 	}
 	if(GetKeyboardRepeat(DIK_Q) == true)
 	{
-		g_fJunpSpeed -= 0.1;
+		g_fJunpSpeed -= 0.1f;
 	}
 	if(GetKeyboardRepeat(DIK_C) == true)
 	{
-		g_fGravity += 0.02;
+		g_fGravity += 0.02f;
 	}
 	if(GetKeyboardRepeat(DIK_Z) == true)
 	{
-		g_fGravity -= 0.02;
+		g_fGravity -= 0.02f;
 	}
 	if (GetKeyboardRepeat(DIK_R) == true)
 	{
@@ -234,25 +234,38 @@ void UpdatePlayer(void)
 // プレイヤーの行動処理
 void PlayerMove()
 {
+	float fAccel = ACCEL;
+
+	//空中にいたら横移動速度減
+	if (g_Player.state == PLAYERSTATE_JUMP)
+	{
+		fAccel *= 0.8f;
+	}
+	else if (g_Player.state == PLAYERSTATE_AIRJUMP)
+	{
+		fAccel *= 0.5f;
+	}
+
 	//移動操作
 	if ((GetKeyboardPress(DIK_A) == true) || (GetKeyboardPress(DIK_D) == true))
 	{//キーボード操作
 		if (GetKeyboardPress(DIK_A) == true)
 		{//左
-			g_Player.move.x = sinf(-0.5f * D3DX_PI) * ACCEL;
-			g_Player.fDirectionMove = 0.0f;
+			g_Player.move.x += sinf(-0.5f * D3DX_PI) * fAccel;
+			if (g_Player.state != PLAYERSTATE_WALLSIDE)
+				g_Player.fDirectionMove = DIRECTION_LEFT;
 		}
 
 		if (GetKeyboardPress(DIK_D) == true)
 		{//右
-			g_Player.move.x = sinf(0.5f * D3DX_PI) * ACCEL;
-			g_Player.fDirectionMove = 0.5f;
+			g_Player.move.x += sinf(0.5f * D3DX_PI) * fAccel;
+			if (g_Player.state != PLAYERSTATE_WALLSIDE)
+				g_Player.fDirectionMove = DIRECTION_RIGHT;
 		}
 	}
 	else if (GetJoypadStick(LEFT).x != 0 || GetJoypadStick(LEFT).y != 0)
 	{//コントローラー操作
-
-		g_Player.move.x = GetJoypadStick(LEFT).x * ACCEL;
+		g_Player.move.x = GetJoypadStick(LEFT).x * fAccel;
 		if (g_Player.move.x < 0)
 		{
 			g_Player.fDirectionMove = 0.0f;
@@ -261,6 +274,17 @@ void PlayerMove()
 		{
 			g_Player.fDirectionMove = 0.5f;
 		}
+
+		//速度制限
+		if (MAX_SPEED < g_Player.move.x)
+		{
+			g_Player.move.x = MAX_SPEED;
+		}
+		else if (g_Player.move.x < -MAX_SPEED)
+		{
+			g_Player.move.x = -MAX_SPEED;
+		}
+
 	}
 	else if (-0.2f <= g_Player.move.x && g_Player.move.x <= 0.2f)
 	{//速度が一定以下で停止
@@ -302,7 +326,7 @@ void MoveReply(void)
 	}
 
 	//慣性
-	g_Player.move.x += (0.0 - g_Player.move.x) * 0.1f;
+	g_Player.move.x += (0.0f - g_Player.move.x) * 0.1f;
 }
 
 //=======================================
@@ -313,11 +337,10 @@ void PlayerJump(void)
 	{//ジャンプ処理
 		if (g_Player.state != PLAYERSTATE_JUMP && g_Player.state != PLAYERSTATE_AIRJUMP && g_Player.state != PLAYERSTATE_FALL)
 		{
-
 			if (g_Player.state == PLAYERSTATE_WALLSIDE)
 			{
 				g_Player.state = PLAYERSTATE_JUMP;
-				g_Player.move.y = -g_fJunpSpeed* 0.8f;
+				g_Player.move.y = -g_fJunpSpeed* 0.75f;
 				g_Player.move.x = (g_Player.fDirectionMove * 4 - 1) * 10.0f;
 			}
 			else
