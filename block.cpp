@@ -94,6 +94,7 @@ void InitBlock(void)
 	//エディットモードオフ
 	g_Edit.bEdit = false;
 	g_Edit.nSetBlock = 0;
+	g_Edit.nTagBlock = 0;
 	g_nSetBlock = 0;
 	g_nLoadBlock = 9;
 
@@ -255,8 +256,9 @@ void UpdateBlock(void)
 // ブロックエディット操作
 void BlockEdit(VERTEX_2D* pVtx)
 {
-	Block* pBlock;			//ブロックポインタ
+	Block* pBlock = &g_aBlock[g_Edit.nTagBlock];			//ブロックポインタ
 	float fTmp;
+	float fTmpWidth,fTmpHeight;
 
 	//ブロック設置
 	if (GetKeyboardTrigger(DIK_RETURN) == true)
@@ -291,7 +293,12 @@ void BlockEdit(VERTEX_2D* pVtx)
 			if (g_Edit.nTagBlock >= MAX_BLOCK)
 				g_Edit.nTagBlock = 0;
 			if (g_aBlock[g_Edit.nTagBlock].bUse == true)
+			{//使用中のブロックが見つかったら
+				pBlock = &g_aBlock[g_Edit.nTagBlock];
+				fTmpWidth = pBlock->fWidth;
+				fTmpHeight = pBlock->fHeight;
 				break;
+			}
 		}
 	}
 	//前のブロックへ
@@ -302,13 +309,16 @@ void BlockEdit(VERTEX_2D* pVtx)
 			g_Edit.nTagBlock--;
 			if (g_Edit.nTagBlock < 0)
 				g_Edit.nTagBlock = MAX_BLOCK-1;
-			if (g_aBlock[g_Edit.nTagBlock].bUse)
+			if (g_aBlock[g_Edit.nTagBlock].bUse == true)
+			{//使用中のブロックが見つかったら
+				pBlock = &g_aBlock[g_Edit.nTagBlock];
+				fTmpWidth = pBlock->fWidth;
+				fTmpHeight = pBlock->fHeight;
 				break;
+			}
 
 		}
 	}
-
-	pBlock = &g_aBlock[g_Edit.nTagBlock];
 
 	//移動
 	if (GetKeyboardRepeat(DIK_UP) == true)
@@ -368,24 +378,22 @@ void BlockEdit(VERTEX_2D* pVtx)
 
 	//回転
 	if (GetKeyboardRepeat(DIK_O) == true)
-	{
+	{//反時計回り　９０度刻み
 		pBlock->fDirection += D3DX_PI * 0.5f;
-		//pBlock->pos += D3DXVECTOR3();
 		fTmp = pBlock->fWidth;
 		pBlock->fWidth = pBlock->fHeight;
 		pBlock->fHeight = fTmp;
 	}
 	if (GetKeyboardRepeat(DIK_K) == true)
-	{
+	{//*時計回り　９０度刻み
 		pBlock->fDirection -= D3DX_PI * 0.5f;
-
 		fTmp = pBlock->fWidth;
 		pBlock->fWidth = pBlock->fHeight;
 		pBlock->fHeight = fTmp;
 	}
 
 	if (GetKeyboardRepeat(DIK_M) == true)
-	{
+	{//元に戻せない
 		pBlock->fDirection = 0;
 	}
 
@@ -448,12 +456,6 @@ void BlockEdit(VERTEX_2D* pVtx)
 			pBlock = &g_aBlock[nCntBlock];
 
 			//頂点座標を設定
-			//pVtx[0].pos = pBlock->pos;
-			//pVtx[1].pos = D3DXVECTOR3(pBlock->pos.x + pBlock->fWidth, pBlock->pos.y, 0.0f);
-			//pVtx[2].pos = D3DXVECTOR3(pBlock->pos.x, pBlock->pos.y + pBlock->fHeight, 0.0f);
-			//pVtx[3].pos = D3DXVECTOR3(pBlock->pos.x + pBlock->fWidth, pBlock->pos.y + pBlock->fHeight, 0.0f);
-
-			//頂点座標を設定
 			pVtx[0].pos = D3DXVECTOR3(pBlock->pos.x, pBlock->pos.y, 0.0f);
 			pVtx[1].pos = D3DXVECTOR3(pBlock->pos.x + sin(D3DX_PI * 0.5f + pBlock->fDirection) * pBlock->fWidth, pBlock->pos.y + cos(D3DX_PI * 0.5f + pBlock->fDirection) * pBlock->fHeight, 0.0f);
 			pVtx[2].pos = D3DXVECTOR3(pBlock->pos.x + sin(D3DX_PI * 0.0f + pBlock->fDirection) * pBlock->fWidth, pBlock->pos.y + cos(D3DX_PI * 0.0f + pBlock->fDirection) * pBlock->fHeight, 0.0f);
@@ -506,15 +508,13 @@ void DrawBlock(void)
 			pDevice->DrawPrimitive(D3DPT_TRIANGLESTRIP, 4 * nCntBlock, 2);
 		}
 	}
-
 }
 
 //=======================================
 // ブロック当たり判定
 //=======================================
-bool CollisionBlock(D3DXVECTOR3* pPos, D3DXVECTOR3* pPosOld, D3DXVECTOR3* pMove,float fTagHeight,float fTagWidth, Block** pBlock)
+void CollisionBlock(D3DXVECTOR3* pPos, D3DXVECTOR3* pPosOld, D3DXVECTOR3* pMove,float fTagHeight,float fTagWidth, Block** pBlock,int*pLand)
 {
-	bool bLand = false;
 	bool bHitHead = false;
 	bool bHitSpike = false;
 	D3DXVECTOR3 posKeep = *pPos;
@@ -541,7 +541,7 @@ bool CollisionBlock(D3DXVECTOR3* pPos, D3DXVECTOR3* pPosOld, D3DXVECTOR3* pMove,
 						(*pPos).y = g_aBlock[nCntBlock].pos.y;
 						(*pMove).y = 0;
 						*pBlock = &g_aBlock[nCntBlock];
-						bLand = true;				//着地
+						*pLand = BLOCKHIT_LAND;			//着地
 					}
 				}
 			}
@@ -556,8 +556,7 @@ bool CollisionBlock(D3DXVECTOR3* pPos, D3DXVECTOR3* pPosOld, D3DXVECTOR3* pMove,
 					if (g_aBlock[nCntBlock].pos.y + g_aBlock[nCntBlock].fHeight <= (*pPosOld).y - fTagHeight)
 					{//前回の位置と比較
 						(*pPos).y = g_aBlock[nCntBlock].pos.y + g_aBlock[nCntBlock].fHeight + fTagHeight;
-						(*pMove).y = 0;
-						bHitHead = true;
+						(*pMove).y *= 0.5f;
 					}
 				}
 			}
@@ -570,6 +569,10 @@ bool CollisionBlock(D3DXVECTOR3* pPos, D3DXVECTOR3* pPosOld, D3DXVECTOR3* pMove,
 				{//前回の位置と比較
 					(*pPos).x = g_aBlock[nCntBlock].pos.x - fTagWidth;
 					*pBlock = &g_aBlock[nCntBlock];	//壁の速度を渡す
+					if (*pLand == BLOCKHIT_NONE)
+					{
+						*pLand = BLOCKHIT_LEFT;
+					}
 				}
 			}
 
@@ -581,12 +584,14 @@ bool CollisionBlock(D3DXVECTOR3* pPos, D3DXVECTOR3* pPosOld, D3DXVECTOR3* pMove,
 				{//前回の位置と比較
 					(*pPos).x = g_aBlock[nCntBlock].pos.x + g_aBlock[nCntBlock].fWidth + fTagWidth;
 					*pBlock = &g_aBlock[nCntBlock];	//壁の速度を渡す
+					if (*pLand == BLOCKHIT_NONE)
+					{
+						*pLand = BLOCKHIT_RIGHT;
+					}
 				}
 			}
 		}
 	}
-		
-	return bLand;
 }
 
 //=======================================

@@ -180,7 +180,9 @@ void GameRunning(void)
 
 	//ポーズ切り替え
 	if (GetKeyboardTrigger(DIK_F1) == true)
+	{
 		g_bDrawPause = g_bDrawPause ^ 1;
+	}
 
 #if _DEBUG
 	//デバッグ用コマンド

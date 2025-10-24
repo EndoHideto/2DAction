@@ -28,6 +28,7 @@ typedef struct
 	time_t starttime;			//開始時刻
 	int nTime;					//経過タイム(秒)
 	bool bTimerStart;			//タイマーが動いているかどうか
+	bool bTimerBreak;			//タイマーが一時停止しているかどうか
 	time_t breaktime;			//ブレイクが発生した時刻
 	int nBreak;					//一時停止中の差分
 	int nSubTime;				//差分の合計
@@ -40,6 +41,6 @@ void UpdateTimer(void);			//更新
 void DrawTimer(void);			//描画
 
 void StopTimer(void);			//タイマーストップ
-void RestartTimer(void);		//タイマーリスタート
+void BreakTimer(bool bTimer);	//タイマー一時停止・リスタート
 Timer GetTimer(void);			//タイマー情報の取得
 #endif // !TIMER_H_

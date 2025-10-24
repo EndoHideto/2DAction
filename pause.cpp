@@ -7,6 +7,8 @@
 #include "fade.h"
 #include "input.h"
 #include "pause.h"
+#include "player.h"
+#include "timer.h"
 
 //”wŒi\‘¢‘Ì‚Ì’è‹`
 
@@ -155,6 +157,7 @@ void UpdatePause(void)
 		{
 			g_bPause = g_bPause ^ 1;
 			g_nChose = 0;
+			BreakTimer(g_bPause);
 		}
 	}
 

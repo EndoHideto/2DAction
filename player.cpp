@@ -7,6 +7,7 @@
 #include "input.h"
 #include "player.h"
 #include "retry.h"
+#include "timer.h"
 
 //マクロ定義
 
@@ -21,6 +22,7 @@ float g_fGravity;
 
 //プロトタイプ宣言
 void PlayerMove(void);
+void MoveReply(void);
 void PlayerJump(void);
 void Collision(void);
 
@@ -38,7 +40,7 @@ void InitPlayer(void)
 	D3DXCreateTextureFromFile(pDevice,"data\\TEXTURE\\Charcter\\cat_walk.png",&g_pTexturePlayer[PLAYERSTATE_JUMP]);		//ジャンプ
 	D3DXCreateTextureFromFile(pDevice,"data\\TEXTURE\\Charcter\\cat_walk.png",&g_pTexturePlayer[PLAYERSTATE_AIRJUMP]);	//二段ジャンプ
 	D3DXCreateTextureFromFile(pDevice,"data\\TEXTURE\\Charcter\\cat_walk.png",&g_pTexturePlayer[PLAYERSTATE_FALL]);		//落下
-	D3DXCreateTextureFromFile(pDevice,"data\\TEXTURE\\Charcter\\NULL",&g_pTexturePlayer[PLAYERSTATE_DEATH]);	//復活待ち
+	D3DXCreateTextureFromFile(pDevice,"data\\TEXTURE\\Charcter\\dead000.png",&g_pTexturePlayer[PLAYERSTATE_DEATH]);	//復活待ち
 
 	//頂点バッファの読み込み
 	pDevice->CreateVertexBuffer(sizeof(VERTEX_2D) * 4,
@@ -136,17 +138,28 @@ void UpdatePlayer(void)
 	}
 	else if (g_Player.bUse == true && g_Player.state != PLAYERSTATE_DEATH)
 	{//生きていて操作可能なら
+
 		//前回の位置位置を保存
 		g_Player.posOld = g_Player.pos;
 
-		g_Player.nCntStart++;
 		g_Player.nCntAnim++;
 		if (g_Player.nCntAnim % 8 == 0)
 		{
 			g_Player.nPtnAnim++;
 		}
-		//プレイヤーの移動・操作
-		PlayerMove();
+
+		//少しの間操作不可
+		g_Player.nCntStart++;
+		if (REVIVALTIME < g_Player.nCntStart)
+		{
+			//タイマーリスタート
+			BreakTimer(false);
+
+			//プレイヤーの操作
+			PlayerMove();
+		}
+		//プレイヤー移動
+		MoveReply();
 	}
 		//頂点バッファをロックし、頂点情報へのポインタを取得
 		g_pVtxBuffPlayer->Lock(0, 0, (void**)&pVtx, 0);
@@ -163,11 +176,22 @@ void UpdatePlayer(void)
 		pVtx[2].col = g_Player.col;
 		pVtx[3].col = g_Player.col;
 
-		//テクスチャの座標設定
-		pVtx[0].tex = D3DXVECTOR2(0.25f * g_Player.nPtnAnim, g_Player.fDirectionMove);
-		pVtx[1].tex = D3DXVECTOR2(0.25f * (g_Player.nPtnAnim + 1), g_Player.fDirectionMove);
-		pVtx[2].tex = D3DXVECTOR2(0.25f * g_Player.nPtnAnim, g_Player.fDirectionMove + 0.5f);
-		pVtx[3].tex = D3DXVECTOR2(0.25f * (g_Player.nPtnAnim + 1), g_Player.fDirectionMove + 0.5f);
+
+		if (g_Player.state == PLAYERSTATE_DEATH)
+		{
+			pVtx[0].tex = D3DXVECTOR2(0.0f, 0.0f);
+			pVtx[1].tex = D3DXVECTOR2(1.0f, 0.0f);
+			pVtx[2].tex = D3DXVECTOR2(0.0f, 1.0f);
+			pVtx[3].tex = D3DXVECTOR2(1.0f, 1.0f);
+		}
+		else
+		{
+			//テクスチャの座標設定
+			pVtx[0].tex = D3DXVECTOR2(0.25f * g_Player.nPtnAnim, g_Player.fDirectionMove);
+			pVtx[1].tex = D3DXVECTOR2(0.25f * (g_Player.nPtnAnim + 1), g_Player.fDirectionMove);
+			pVtx[2].tex = D3DXVECTOR2(0.25f * g_Player.nPtnAnim, g_Player.fDirectionMove + 0.5f);
+			pVtx[3].tex = D3DXVECTOR2(0.25f * (g_Player.nPtnAnim + 1), g_Player.fDirectionMove + 0.5f);
+		}
 
 		//頂点バッファのロック解除
 		g_pVtxBuffPlayer->Unlock();
@@ -201,56 +225,56 @@ void UpdatePlayer(void)
 	if (GetKeyboardRepeat(DIK_B) == true)
 	{
 		g_Player.col.b = (((int)(g_Player.col.b * 10) + 1) % 11) * 0.1f;
-
 	}
 
 #endif
 }
 
 //=======================================
-// プレイヤーの移動処理
+// プレイヤーの行動処理
 void PlayerMove()
-{	
-	if (REVIVALTIME < g_Player.nCntStart)
-	{
-		//移動操作
-		if ((GetKeyboardPress(DIK_A) == true) || (GetKeyboardPress(DIK_D) == true))
-		{//キーボード操作
-			if (GetKeyboardPress(DIK_A) == true)
-			{//左
-				g_Player.move.x = sinf(-0.5f * D3DX_PI) * ACCEL;
-				g_Player.fDirectionMove = 0.0f;
-			}
-
-			if (GetKeyboardPress(DIK_D) == true)
-			{//右
-				g_Player.move.x = sinf(0.5f * D3DX_PI) * ACCEL;
-				g_Player.fDirectionMove = 0.5f;
-			}
-
-		}
-		else if (GetJoypadStick(LEFT).x != 0 || GetJoypadStick(LEFT).y != 0)
-		{//コントローラー操作
-
-			g_Player.move.x = GetJoypadStick(LEFT).x * ACCEL;
-			if (g_Player.move.x < 0)
-			{
-				g_Player.fDirectionMove = 0.0f;
-			}
-			if (0 < g_Player.move.x)
-			{
-				g_Player.fDirectionMove = 0.5f;
-			}
-		}
-		else if (-0.2f <= g_Player.move.x && g_Player.move.x <= 0.2f)
-		{//速度が一定以下で停止
-			g_Player.move.x = 0;
+{
+	//移動操作
+	if ((GetKeyboardPress(DIK_A) == true) || (GetKeyboardPress(DIK_D) == true))
+	{//キーボード操作
+		if (GetKeyboardPress(DIK_A) == true)
+		{//左
+			g_Player.move.x = sinf(-0.5f * D3DX_PI) * ACCEL;
+			g_Player.fDirectionMove = 0.0f;
 		}
 
-		//ジャンプ
-		PlayerJump();
+		if (GetKeyboardPress(DIK_D) == true)
+		{//右
+			g_Player.move.x = sinf(0.5f * D3DX_PI) * ACCEL;
+			g_Player.fDirectionMove = 0.5f;
+		}
 	}
+	else if (GetJoypadStick(LEFT).x != 0 || GetJoypadStick(LEFT).y != 0)
+	{//コントローラー操作
 
+		g_Player.move.x = GetJoypadStick(LEFT).x * ACCEL;
+		if (g_Player.move.x < 0)
+		{
+			g_Player.fDirectionMove = 0.0f;
+		}
+		if (0 < g_Player.move.x)
+		{
+			g_Player.fDirectionMove = 0.5f;
+		}
+	}
+	else if (-0.2f <= g_Player.move.x && g_Player.move.x <= 0.2f)
+	{//速度が一定以下で停止
+		g_Player.move.x = 0;
+	}
+	//ジャンプ
+	PlayerJump();
+
+}
+
+//=======================================
+// プレイヤーの移動処理
+void MoveReply(void)
+{
 	//重力の影響
 	g_Player.move.y += g_fGravity;
 
@@ -265,10 +289,16 @@ void PlayerMove()
 	{
 		g_Player.move += g_Player.pBlock->move;
 		if (g_Player.pBlock->type == BLOCKTYPE_SPIKE)
-		{
+		{//とげに当たっていた場合は死ぬ
+			BreakTimer(true);
 			g_Player.state = PLAYERSTATE_DEATH;
 			g_Player.bUse = false;
+			return;
 		}
+	}
+	if (g_Player.state == PLAYERSTATE_WALLSIDE)
+	{
+		g_Player.move.y *= 0.8f;
 	}
 
 	//慣性
@@ -283,8 +313,18 @@ void PlayerJump(void)
 	{//ジャンプ処理
 		if (g_Player.state != PLAYERSTATE_JUMP && g_Player.state != PLAYERSTATE_AIRJUMP && g_Player.state != PLAYERSTATE_FALL)
 		{
-			g_Player.state = PLAYERSTATE_JUMP;
-			g_Player.move.y = -g_fJunpSpeed;
+
+			if (g_Player.state == PLAYERSTATE_WALLSIDE)
+			{
+				g_Player.state = PLAYERSTATE_JUMP;
+				g_Player.move.y = -g_fJunpSpeed* 0.8f;
+				g_Player.move.x = (g_Player.fDirectionMove * 4 - 1) * 10.0f;
+			}
+			else
+			{
+				g_Player.state = PLAYERSTATE_JUMP;
+				g_Player.move.y = -g_fJunpSpeed;
+			}
 		}
 		else if (g_Player.state != PLAYERSTATE_AIRJUMP && g_Player.state != PLAYERSTATE_FALL)
 		{
@@ -299,7 +339,9 @@ void PlayerJump(void)
 void Collision(void)
 {
 	Player* pPlayer = &g_Player;
+	int nLand = 0b0000;
 
+	//外周の当たり判定
 	if (pPlayer->pos.x < 0)
 	{
 		pPlayer->pos.x = 0;
@@ -320,20 +362,31 @@ void Collision(void)
 		{
 			g_Player.move.y = 0.0f;
 		}
-		g_Player.state = PLAYERSTATE_NORMAL;
-		g_Player.pos.y = SCREEN_HEIGHT;
+		g_Player.state = PLAYERSTATE_DEATH;
+		g_Player.bUse = false;
+		return;
 	}
 
-	if (CollisionBlock(&pPlayer->pos, &pPlayer->posOld, &pPlayer->move,pPlayer->fHeight,pPlayer->fWidth,&pPlayer->pBlock) == true)
+	//ブロックの当たり判定
+	CollisionBlock(&pPlayer->pos, &pPlayer->posOld, &pPlayer->move, pPlayer->fHeight, pPlayer->fWidth, &pPlayer->pBlock,&nLand);
+	if (nLand != BLOCKHIT_NONE)
 	{//着地したら
 		g_Player.bDash = false;
-		if(g_Player.move.x != 0)
-		g_Player.state = PLAYERSTATE_WALK;
+		if (nLand  == BLOCKHIT_LAND)
+		{//着地してたら
+			if (g_Player.move.x != 0)
+				g_Player.state = PLAYERSTATE_WALK;
+			else
+				g_Player.state = PLAYERSTATE_NORMAL;
+		}
 		else
-		g_Player.state = PLAYERSTATE_NORMAL;
+		{//それ以外の返り値があったら
+			g_Player.state = PLAYERSTATE_WALLSIDE;
+			g_Player.fDirectionMove = (nLand - 1) * 0.5f;
+		}
 	}
-	else if(g_Player.state != PLAYERSTATE_JUMP && g_Player.state != PLAYERSTATE_AIRJUMP)
-	{
+	else if(g_Player.state != PLAYERSTATE_FALL && g_Player.state != PLAYERSTATE_AIRJUMP)
+	{//空中にいたら
 		g_Player.state = PLAYERSTATE_JUMP;
 	}
 }

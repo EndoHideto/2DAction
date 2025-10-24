@@ -39,6 +39,7 @@ void InitTimer(void)
 	g_timer.posStart = TIMERSTART_OBJPOS;		//スタートオブジェクトの位置
 	g_timer.fSize = 50;							//文字サイズ
 	g_timer.bTimerStart = false;				//スタートフラグ
+	g_timer.bTimerBreak = false;				//タイマー一時停止フラグ
 	g_timer.nBreak = 0;							//タイマー一時停止一階分の差分
 	g_timer.nSubTime = 0;						//タイマー一時停止合計
 
@@ -178,8 +179,8 @@ void UpdateTimer(void)
 	else
 	{
 		nowtime = timeGetTime();
-		if (GetPlayer()->bUse != false)
-		{//死んだ瞬間の時刻を保存
+		if (g_timer.bTimerBreak == false)
+		{//常に時刻を保存　止めた瞬間更新が止まる
 			g_timer.breaktime = nowtime;
 		}
 
@@ -266,16 +267,19 @@ void DrawTimer(void)
 void StopTimer(void)
 {
 	g_timer.bTimerStart = false;
-
 }
 
 //=======================================
-//タイマーリスタート
+//タイマー一時停止・リスタート
 //=======================================
-void RestartTimer(void)
+void BreakTimer(bool bTimer) 
 {
-	g_timer.nSubTime += g_timer.nBreak;
-	g_timer.nBreak = 0;
+	g_timer.bTimerBreak = bTimer;
+	if (g_timer.bTimerBreak)
+	{//一時停止したら
+		g_timer.nSubTime += g_timer.nBreak;	//前回の一時停止時間を合計に加算
+		g_timer.nBreak = 0;					//初期化
+	}
 }
 
 //=======================================

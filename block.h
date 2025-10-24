@@ -9,11 +9,18 @@
 
 #include "main.h"
 
-#define BLOCK_VER_NUM (4)						//頂点数
-#define MAX_BLOCK (255)							//ブロック最大数
-#define FILE_SAVEDATA "data\\STAGE\\block.bin"	//ブロック情報を保存するファイル
-#define BLOCKTEX_INTERVAL (30.0f)				//ブロックテクスチャを繰り返す幅
+#define BLOCK_VER_NUM		(4)							//頂点数
+#define MAX_BLOCK			(255)						//ブロック最大数
+#define FILE_SAVEDATA		"data\\STAGE\\block.bin"	//ブロック情報を保存するファイル
+#define BLOCKTEX_INTERVAL	(30.0f)						//ブロックテクスチャを繰り返す幅
 
+#define BLOCKHIT_NONE		(0b0000)					//ブロックに当たってない
+#define BLOCKHIT_LAND		(0b1000)					//地面に立ったとき
+#define BLOCKHIT_HEAD		(0b0100)					//頭が当たった時
+#define BLOCKHIT_RIGHT		(0b0010)					//右からあたる
+#define BLOCKHIT_LEFT		(0b0001)					//左からあたる
+
+//ブロックの種類列挙型
 typedef enum
 {
 	BLOCKTYPE_NORMAL = 0,
@@ -67,7 +74,7 @@ void InitBlock(void);
 void UninitBlock(void);
 void UpdateBlock(void);
 void DrawBlock(void);
-bool CollisionBlock(D3DXVECTOR3* pPos, D3DXVECTOR3* pPosOld, D3DXVECTOR3* pMove, float fTagHeight, float fTagWidth,Block **pBlock);
+void CollisionBlock(D3DXVECTOR3* pPos, D3DXVECTOR3* pPosOld, D3DXVECTOR3* pMove, float fTagHeight, float fTagWidth, Block** pBlock,int *pLand);
 void SetBlock(D3DXVECTOR3 pos,float fWidth, float fHeight,D3DXVECTOR3 move, float fRange,BlockType type,float fDirection);
 Block* GetBlock(void);
 

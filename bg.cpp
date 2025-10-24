@@ -101,10 +101,10 @@ void UpdateBG(void)
 	for (int nCntBG = 0; nCntBG < BGLAYER_MAX ; nCntBG++, pVtx += 4)
 	{
 		//テクスチャの座標設定
-		pVtx[0].tex = D3DXVECTOR2(0.0f + GetPlayer()->pos.x * 0.00005 * (BGLAYER_MAX - nCntBG), 0.0f);
-		pVtx[1].tex = D3DXVECTOR2(1.2f + GetPlayer()->pos.x * 0.00005 * (BGLAYER_MAX - nCntBG), 0.0f);
-		pVtx[2].tex = D3DXVECTOR2(0.0f + GetPlayer()->pos.x * 0.00005 * (BGLAYER_MAX - nCntBG), 1.0f);
-		pVtx[3].tex = D3DXVECTOR2(1.2f + GetPlayer()->pos.x * 0.00005 * (BGLAYER_MAX - nCntBG), 1.0f);
+		pVtx[0].tex = D3DXVECTOR2(0.0f + GetPlayer()->pos.x * 0.00005f * ((float)BGLAYER_MAX - nCntBG), 0.0f);
+		pVtx[1].tex = D3DXVECTOR2(1.2f + GetPlayer()->pos.x * 0.00005f * ((float)BGLAYER_MAX - nCntBG), 0.0f);
+		pVtx[2].tex = D3DXVECTOR2(0.0f + GetPlayer()->pos.x * 0.00005f * ((float)BGLAYER_MAX - nCntBG), 1.0f);
+		pVtx[3].tex = D3DXVECTOR2(1.2f + GetPlayer()->pos.x * 0.00005f * ((float)BGLAYER_MAX - nCntBG), 1.0f);
 	}
 
 	//頂点バッファのロック解除

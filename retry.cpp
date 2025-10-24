@@ -25,8 +25,7 @@ void InitRetry(void)
 	VERTEX_2D* pVtx;									//頂点情報へのポインタ
 
 	//テクスチャ読み込み
-	D3DXCreateTextureFromFile(pDevice,"data\\TEXTURE\\BG\\pause001.png",&g_pTextureRetry);
-
+	D3DXCreateTextureFromFile(pDevice,"data\\TEXTURE\\Word\\pause001.png",&g_pTextureRetry);
 
 	//頂点バッファの読み込み
 	pDevice->CreateVertexBuffer(sizeof(VERTEX_2D) * 4,
@@ -122,7 +121,6 @@ void UpdateRetry(void)
 				g_nRetryCounter = RETRY_COUTER;				//カウンターの初期化
 				g_bRetry = false;							//falseに戻す
 				GetPlayer()->state = PLAYERSTATE_NORMAL;	//状態を復活
-				RestartTimer();								//タイマーを再開
 			}
 
 			//リトライ非表示
